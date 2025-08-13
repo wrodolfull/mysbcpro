@@ -1,0 +1,14 @@
+<include>
+  <gateway name="{{trunk.name}}">
+    <param name="proxy" value="{{trunk.proxy}}" />
+    <param name="register" value="{{#if trunk.registrar}}true{{else}}false{{/if}}" />
+    {{#if trunk.registrar}}
+    <param name="register-proxy" value="{{trunk.registrar}}" />
+    <param name="expire-seconds" value="{{trunk.expires}}" />
+    {{/if}}
+    {{#if trunk.username}}<param name="username" value="{{trunk.username}}" />{{/if}}
+    {{#if trunk.secret}}<param name="password" value="{{trunk.secret}}" />{{/if}}
+    {{#if trunk.transport}}<param name="register-transport" value="{{trunk.transport}}" />{{/if}}
+  </gateway>
+</include>
+

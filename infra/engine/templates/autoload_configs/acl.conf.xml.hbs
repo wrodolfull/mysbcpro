@@ -1,0 +1,11 @@
+<configuration name="acl.conf" description="Network Lists">
+  <network-lists>
+    <list name="lan" default="deny">
+      <node type="allow" cidr="127.0.0.1/32"/>
+      {{#each acl}}
+      <node type="allow" cidr="{{this}}"/>
+      {{/each}}
+    </list>
+  </network-lists>
+</configuration>
+

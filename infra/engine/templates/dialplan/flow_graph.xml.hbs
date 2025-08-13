@@ -1,0 +1,9 @@
+<include>
+  <extension name="flow_{{flow.id}}">
+    {{!-- Minimal placeholder: entry to flow handler --}}
+    <condition field="always" expression="true">
+      <action application="lua" data="flow_exec.lua {{flow.id}}" />
+    </condition>
+  </extension>
+</include>
+

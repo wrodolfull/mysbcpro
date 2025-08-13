@@ -1,0 +1,9 @@
+<include>
+  <extension name="{{inbound.name}}">
+    <condition field="destination_number" expression="^{{inbound.didOrUri}}$">
+      <action application="set" data="caller_id_number={{inbound.callerIdNumber}}" />
+      <action application="transfer" data="{{inbound.target_flow_id}} XML {{inbound.context}}" />
+    </condition>
+  </extension>
+</include>
+
