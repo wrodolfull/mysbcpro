@@ -21,6 +21,10 @@ curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y 
 corepack enable && corepack prepare pnpm@9.6.0 --activate
 
 # 3) FreeSWITCH (básico)
+chmod +x ./infra/engine/install_freeswitch_debian.sh
+chmod +x ./infra/engine/post_install_config.sh
+chmod +x ./infra/engine/verify_engine.sh
+
 ./infra/engine/install_freeswitch_debian.sh
 ./infra/engine/post_install_config.sh
 ./infra/engine/verify_engine.sh
