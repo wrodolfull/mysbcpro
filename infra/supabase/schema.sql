@@ -67,6 +67,24 @@ create table if not exists public.executions (
   created_at timestamptz default now()
 );
 
+-- audio files
+create table if not exists public.audios (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null,
+  name text not null,
+  type text not null check (type in ('uploaded', 'tts')),
+  filename text not null,
+  mime_type text not null,
+  size_bytes int not null,
+  storage_path text not null,
+  engine_path text not null,
+  tts_text text,
+  tts_voice text,
+  tts_chars_used int,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
 -- communications objects
 create table if not exists public.trunks (
   id uuid primary key default gen_random_uuid(),
@@ -115,6 +133,7 @@ create table if not exists public.flows (
 );
 
 -- RLS enable
+alter table public.audios enable row level security;
 alter table public.trunks enable row level security;
 alter table public.inbounds enable row level security;
 alter table public.flows enable row level security;
@@ -122,6 +141,12 @@ alter table public.events enable row level security;
 alter table public.executions enable row level security;
 
 -- Policies (assumes JWT contains organization_id claim)
+do $$ begin
+  create policy if not exists org_access_audios on public.audios
+    for all using (organization_id::text = coalesce((auth.jwt() ->> 'organization_id'), ''))
+    with check (organization_id::text = coalesce((auth.jwt() ->> 'organization_id'), ''));
+exception when others then null; end $$;
+
 do $$ begin
   create policy if not exists org_access_trunks on public.trunks
     for all using (organization_id::text = coalesce((auth.jwt() ->> 'organization_id'), ''))

@@ -1,0 +1,41 @@
+{{#each nodes}}
+<!-- Node: {{this.id}} ({{this.type}}) -->
+{{#if (eq this.type "play_audio")}}
+<action application="playback" data="{{../audioPath}}/{{this.data.file}}" />
+
+{{else if (eq this.type "tts")}}
+<action application="speak" data="tts_commandline|{{../organization.ttsVoice}}|{{this.data.text}}" />
+
+{{else if (eq this.type "ivr_capture")}}
+{{#if this.data.prompt}}
+{{#if (startsWith this.data.prompt "tts:")}}
+<action application="speak" data="tts_commandline|{{../organization.ttsVoice}}|{{substring this.data.prompt 4}}" />
+{{else}}
+<action application="playback" data="{{../audioPath}}/{{this.data.prompt}}" />
+{{/if}}
+{{/if}}
+<action application="play_and_get_digits" data="{{this.data.minDigits}} {{this.data.maxDigits}} {{this.data.tries}} {{this.data.timeoutMs}} {{#if this.data.regex}}{{this.data.regex}}{{else}}\\d+{{/if}} silence_stream://250 {{../audioPath}}/invalid.wav ivr_result_{{this.id}}" />
+
+{{else if (eq this.type "forward")}}
+<action application="bridge" data="{{this.data.destination}}" />
+
+{{else if (eq this.type "record_call")}}
+{{#if (eq this.data.action "start")}}
+<action application="record_session" data="{{../audioPath}}/recordings/${strftime(%Y-%m-%d)}_${trace_id}.wav" />
+{{else if (eq this.data.action "stop")}}
+<action application="stop_record_session" data="{{../audioPath}}/recordings/${strftime(%Y-%m-%d)}_${trace_id}.wav" />
+{{/if}}
+
+{{else if (eq this.type "survey_csat")}}
+<action application="lua" data="csat_survey.lua {{this.data.surveyId}} ${trace_id}" />
+
+{{else if (eq this.type "http_request")}}
+<action application="lua" data="http_request.lua {{this.id}} ${trace_id}" />
+
+{{else if (eq this.type "business_hours")}}
+<action application="lua" data="business_hours.lua {{this.id}} ${trace_id}" />
+
+{{/if}}
+{{/each}}
+```
+  </rewritten_file>

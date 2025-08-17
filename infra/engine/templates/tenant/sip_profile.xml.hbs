@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<profile name="{{tenantId}}">
+  <gateways>
+    <!-- Gateways for this tenant will be loaded from directory -->
+  </gateways>
+  
+  <domains>
+    <domain name="{{tenantId}}.internal" alias="false" parse="true"/>
+  </domains>
+  
+  <settings>
+    <param name="debug" value="0"/>
+    <param name="sip-trace" value="no"/>
+    <param name="sip-capture" value="no"/>
+    
+    <param name="watchdog-enabled" value="no"/>
+    <param name="watchdog-step-timeout" value="30000"/>
+    <param name="watchdog-event-timeout" value="30000"/>
+    
+    <param name="log-auth-failures" value="false"/>
+    <param name="forward-unsolicited-mwi-notify" value="false"/>
+    
+    <param name="context" value="{{tenantId}}_context"/>
+    <param name="rfc2833-pt" value="101"/>
+    <param name="sip-port" value="{{sipPort}}"/>
+    <param name="dialplan" value="XML"/>
+    <param name="dtmf-duration" value="2000"/>
+    <param name="inbound-codec-prefs" value="PCMU,PCMA,G729"/>
+    <param name="outbound-codec-prefs" value="PCMU,PCMA,G729"/>
+    <param name="rtp-timer-name" value="soft"/>
+    <param name="local-network-acl" value="localnet.auto"/>
+    <param name="manage-presence" value="false"/>
+    
+    <param name="inbound-codec-negotiation" value="generous"/>
+    <param name="nonce-ttl" value="60"/>
+    <param name="auth-calls" value="false"/>
+    <param name="inbound-late-negotiation" value="true"/>
+    <param name="inbound-zrtp-passthru" value="true"/>
+    
+    <param name="rtp-ip" value="$${local_ip_v4}"/>
+    <param name="sip-ip" value="$${local_ip_v4}"/>
+    <param name="hold-music" value="$${hold_music}"/>
+    <param name="apply-nat-acl" value="nat.auto"/>
+    
+    <param name="record-path" value="/usr/local/freeswitch/recordings/{{tenantId}}"/>
+    <param name="record-template" value="$${uuid}.wav"/>
+    
+    <!-- Multi-tenant specific settings -->
+    <param name="tenant-id" value="{{tenantId}}"/>
+    <param name="organization-id" value="{{organizationId}}"/>
+  </settings>
+</profile>

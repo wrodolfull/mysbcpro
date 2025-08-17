@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "start": "node dist/main.js",
-    "start:dev": "nest start --watch",
-    "build": "nest build",
+    "start:dev": "nest build && node scripts/fix-extensions.mjs && node dist/main.js",
+    "start:watch": "nest start --watch",
+    "build": "nest build && node scripts/fix-extensions.mjs",
     "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "clean": "rimraf dist"
@@ -25,7 +26,8 @@
     "@supabase/supabase-js": "^2.45.4",
     "nestjs-pino": "^4.0.0",
     "pino": "^9.3.2",
-    "handlebars": "^4.7.8"
+    "handlebars": "^4.7.8",
+    "esl": "^11.2.1"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.4.5",

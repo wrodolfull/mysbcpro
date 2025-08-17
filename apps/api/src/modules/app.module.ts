@@ -10,6 +10,7 @@ import { QuotasModule } from './quotas/quotas.module';
 import { EventsModule } from './events/events.module';
 import { AudioModule } from './audio/audio.module';
 import { CsatModule } from './csat/csat.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -27,7 +28,8 @@ import { CsatModule } from './csat/csat.module';
     QuotasModule,
     EventsModule,
     AudioModule,
-    CsatModule
+    CsatModule,
+    AuthModule
   ]
 })
 export class AppModule {}

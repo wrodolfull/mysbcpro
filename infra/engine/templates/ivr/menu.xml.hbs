@@ -1,0 +1,18 @@
+<include>
+  <menu name="{{node.id}}_menu_{{flowId}}" 
+        greet-long="{{organizationId}}/{{node.data.prompt}}"
+        greet-short="{{organizationId}}/{{node.data.prompt}}"
+        invalid-sound="{{organizationId}}/invalid.wav"
+        exit-sound="{{organizationId}}/goodbye.wav"
+        timeout="{{node.data.timeoutMs}}"
+        digit-len="{{node.data.maxDigits}}"
+        max-failures="{{node.data.tries}}">
+    
+    {{#each node.data.options}}
+    <entry action="menu-exec-app" digits="{{this.digits}}" param="transfer {{this.target}} XML default"/>
+    {{/each}}
+    
+    <!-- Default actions -->
+    <entry action="menu-exec-app" digits="/^([0-9]+)$/" param="lua ivr_capture_result.lua {{../node.id}} $1 ${trace_id}"/>
+  </menu>
+</include>

@@ -1,0 +1,34 @@
+-- Flow Engine Executor
+-- Usage: lua flow_engine.lua <flow_id> <version> <trace_id>
+
+local flow_id = argv[1]
+local version = argv[2] 
+local trace_id = argv[3]
+
+if not flow_id or not version or not trace_id then
+  freeswitch.consoleLog("ERROR", "Missing required parameters: flow_id, version, trace_id\n")
+  return
+end
+
+-- Get organization from session
+local org_id = session:getVariable("organization_id")
+if not org_id then
+  freeswitch.consoleLog("ERROR", "No organization_id in session\n")
+  session:hangup()
+  return
+end
+
+-- Set flow execution variables
+session:setVariable("flow_id", flow_id)
+session:setVariable("flow_version", version)
+session:setVariable("trace_id", trace_id)
+session:setVariable("current_node", "start")
+
+-- Log flow execution start
+local log_msg = string.format("Starting flow execution: org=%s, flow=%s, version=%s, trace=%s", 
+  org_id, flow_id, version, trace_id)
+freeswitch.consoleLog("INFO", log_msg .. "\n")
+
+-- Execute flow by transferring to flow-specific dialplan
+local flow_extension = string.format("flow_%s_v%s", flow_id, version)
+session:transfer(flow_extension, "XML", "default")

@@ -37,6 +37,7 @@ cat >"$BASE/autoload_configs/modules.conf.xml" <<XML
     <load module="mod_event_socket"/>
     <load module="mod_dptools"/>
     <load module="mod_xml_cdr"/>
+    <load module="mod_python3"/>
   </modules>
 </configuration>
 XML

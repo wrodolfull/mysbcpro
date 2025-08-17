@@ -1,8 +1,20 @@
 <include>
-  <extension name="{{inbound.name}}">
+  <extension name="{{inbound.name}}_{{inbound.priority}}">
     <condition field="destination_number" expression="^{{inbound.didOrUri}}$">
+      {{#if inbound.callerIdNumber}}
       <action application="set" data="caller_id_number={{inbound.callerIdNumber}}" />
-      <action application="transfer" data="{{inbound.target_flow_id}} XML {{inbound.context}}" />
+      {{/if}}
+      {{#if inbound.networkAddr}}
+      <action application="set" data="network_addr={{inbound.networkAddr}}" />
+      {{/if}}
+      <action application="set" data="organization_id={{organizationId}}" />
+      <action application="set" data="inbound_name={{inbound.name}}" />
+      {{#if inbound.targetFlowId}}
+      <action application="transfer" data="flow_{{inbound.targetFlowId}} XML {{inbound.context}}" />
+      {{else}}
+      <action application="playback" data="ivr/8000/ivr-no_matching_results.wav" />
+      <action application="hangup" />
+      {{/if}}
     </condition>
   </extension>
 </include>

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<context name="{{tenantId}}_context">
+  
+  <!-- Inbound call routing - will be populated by inbound connectors -->
+  <extension name="{{tenantId}}_inbound_routing">
+    <condition field="destination_number" expression="^(.*)$">
+      <action application="set" data="tenant_id={{tenantId}}"/>
+      <action application="set" data="organization_id={{organizationId}}"/>
+      <action application="set" data="call_direction=inbound"/>
+      
+      <!-- Set recording path for this tenant -->
+      <action application="set" data="RECORD_ARTIST={{tenantId}}"/>
+      <action application="set" data="record_session=/usr/local/freeswitch/recordings/{{tenantId}}/$${uuid}.wav"/>
+      
+      <!-- Default action - play message and hangup -->
+      <action application="playback" data="tone_stream://%(1000,4000,480,620)"/>
+      <action application="log" data="INFO No inbound connector configured for {{tenantId}} - call to $1"/>
+      <action application="hangup" data="NORMAL_CLEARING"/>
+    </condition>
+  </extension>
+  
+  <!-- Outbound call routing - for SIP trunks -->
+  <extension name="{{tenantId}}_outbound_routing">
+    <condition field="destination_number" expression="^(\d{10,})$">
+      <action application="set" data="tenant_id={{tenantId}}"/>
+      <action application="set" data="organization_id={{organizationId}}"/>
+      <action application="set" data="call_direction=outbound"/>
+      
+      <!-- Will route through configured trunks -->
+      <action application="log" data="INFO Outbound call from {{tenantId}} to $1"/>
+      <action application="hangup" data="NO_ROUTE_DESTINATION"/>
+    </condition>
+  </extension>
+  
+  <!-- Flow execution context -->
+  <extension name="{{tenantId}}_flow_execution">
+    <condition field="destination_number" expression="^flow_(\w+)$">
+      <action application="set" data="tenant_id={{tenantId}}"/>
+      <action application="set" data="organization_id={{organizationId}}"/>
+      <action application="set" data="flow_id=$1"/>
+      <action application="set" data="trace_id=$${uuid}"/>
+      
+      <!-- Execute flow logic -->
+      <action application="lua" data="flow_engine.lua"/>
+    </condition>
+  </extension>
+  
+  <!-- CSAT Survey context -->
+  <extension name="{{tenantId}}_csat_survey">
+    <condition field="destination_number" expression="^csat_(\w+)$">
+      <action application="set" data="tenant_id={{tenantId}}"/>
+      <action application="set" data="organization_id={{organizationId}}"/>
+      <action application="set" data="survey_id=$1"/>
+      
+      <!-- Execute CSAT survey -->
+      <action application="lua" data="csat_survey.lua"/>
+    </condition>
+  </extension>
+  
+  <!-- Internal tenant utilities -->
+  <extension name="{{tenantId}}_echo_test">
+    <condition field="destination_number" expression="^9999$">
+      <action application="set" data="tenant_id={{tenantId}}"/>
+      <action application="answer"/>
+      <action application="echo"/>
+    </condition>
+  </extension>
+  
+</context>

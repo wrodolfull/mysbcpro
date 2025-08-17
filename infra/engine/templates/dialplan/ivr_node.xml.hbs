@@ -1,0 +1,16 @@
+<!-- IVR Node: {{node.id}} -->
+<action application="set" data="continue_on_fail=true" />
+<action application="set" data="hangup_after_bridge=true" />
+{{#if node.data.prompt}}
+{{#if (startsWith node.data.prompt "tts:")}}
+<action application="speak" data="tts_commandline|{{organization.ttsVoice}}|{{substring node.data.prompt 4}}" />
+{{else}}
+<action application="playback" data="{{audioPath}}/{{node.data.prompt}}" />
+{{/if}}
+{{/if}}
+<action application="play_and_get_digits" data="{{node.data.minDigits}} {{node.data.maxDigits}} {{node.data.tries}} {{node.data.timeoutMs}} {{#if node.data.regex}}{{node.data.regex}}{{else}}\\d+{{/if}} {{audioPath}}/{{node.data.prompt}} {{audioPath}}/invalid.wav ivr_result" />
+<!-- Route based on IVR result -->
+{{#each node.routes}}
+<action application="set" data="api_result=${regex(${ivr_result}|{{this.pattern}}|{{this.target}})}" />
+{{/each}}
+<action application="transfer" data="${api_result} XML {{context}}" />

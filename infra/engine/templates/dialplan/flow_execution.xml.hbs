@@ -1,0 +1,18 @@
+<include>
+  <extension name="flow_{{flow.id}}_v{{flow.version}}">
+    <condition field="destination_number" expression="^flow_{{flow.id}}$">
+      <!-- Flow: {{flow.name}} v{{flow.version}} -->
+      <action application="set" data="flow_id={{flow.id}}" />
+      <action application="set" data="flow_version={{flow.version}}" />
+      <action application="set" data="organization_id={{organizationId}}" />
+      <action application="set" data="trace_id=${uuid()}" />
+      <action application="export" data="trace_id=${trace_id}" />
+      
+      <!-- Audio path for this tenant -->
+      <action application="set" data="audio_path={{audioPath}}" />
+      
+      <!-- Execute flow graph via Lua script -->
+      <action application="lua" data="flow_engine.lua {{flow.id}} {{flow.version}} ${trace_id}" />
+    </condition>
+  </extension>
+</include>

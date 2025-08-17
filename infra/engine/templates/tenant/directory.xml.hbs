@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<domain name="{{tenantId}}.internal">
+  <params>
+    <param name="dial-string" value="{^^:sip_invite_domain=${dialed_domain}:presence_id=${dialed_user}@${dialed_domain}}${sofia_contact(*/${dialed_user}@${dialed_domain})}"/>
+    <param name="jsonrpc-allowed-methods" value="verto"/>
+    <param name="jsonrpc-allowed-event-channels" value="demo,conference,presence"/>
+  </params>
+  
+  <variables>
+    <variable name="tenant_id" value="{{tenantId}}"/>
+    <variable name="organization_id" value="{{organizationId}}"/>
+    <variable name="record_stereo" value="true"/>
+    <variable name="default_gateway" value="$${default_provider}"/>
+    <variable name="default_areacode" value="$${default_areacode}"/>
+    <variable name="transfer_fallback_extension" value="operator"/>
+  </variables>
+  
+  <groups>
+    <group name="{{tenantId}}_agents">
+      <users>
+        <!-- Agent users will be dynamically created here -->
+        <!-- Example user structure:
+        <user id="agent001">
+          <params>
+            <param name="password" value="generated_password"/>
+            <param name="vm-password" value="generated_password"/>
+          </params>
+          <variables>
+            <variable name="tenant_id" value="{{tenantId}}"/>
+            <variable name="organization_id" value="{{organizationId}}"/>
+            <variable name="toll_allow" value="domestic,international,local"/>
+            <variable name="accountcode" value="{{tenantId}}_agent001"/>
+            <variable name="user_context" value="{{tenantId}}_context"/>
+            <variable name="effective_caller_id_name" value="{{organizationName}} Agent"/>
+            <variable name="effective_caller_id_number" value="agent001"/>
+            <variable name="outbound_caller_id_name" value="$${outbound_caller_name}"/>
+            <variable name="outbound_caller_id_number" value="$${outbound_caller_id}"/>
+            <variable name="callgroup" value="{{tenantId}}_agents"/>
+          </variables>
+        </user>
+        -->
+      </users>
+    </group>
+    
+    <group name="{{tenantId}}_systems">
+      <users>
+        <!-- System users for API integration -->
+        <user id="api_user">
+          <params>
+            <param name="password" value="{{apiPassword}}"/>
+            <param name="vm-enabled" value="false"/>
+          </params>
+          <variables>
+            <variable name="tenant_id" value="{{tenantId}}"/>
+            <variable name="organization_id" value="{{organizationId}}"/>
+            <variable name="user_context" value="{{tenantId}}_context"/>
+            <variable name="accountcode" value="{{tenantId}}_api"/>
+          </variables>
+        </user>
+      </users>
+    </group>
+  </groups>
+  
+</domain>

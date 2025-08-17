@@ -1,14 +1,30 @@
 <include>
   <gateway name="{{trunk.name}}">
-    <param name="proxy" value="{{trunk.proxy}}" />
+    <param name="proxy" value="{{trunk.host}}" />
     <param name="register" value="{{#if trunk.registrar}}true{{else}}false{{/if}}" />
     {{#if trunk.registrar}}
     <param name="register-proxy" value="{{trunk.registrar}}" />
-    <param name="expire-seconds" value="{{trunk.expires}}" />
+    <param name="expire-seconds" value="{{#if trunk.expires}}{{trunk.expires}}{{else}}300{{/if}}" />
     {{/if}}
     {{#if trunk.username}}<param name="username" value="{{trunk.username}}" />{{/if}}
     {{#if trunk.secret}}<param name="password" value="{{trunk.secret}}" />{{/if}}
     {{#if trunk.transport}}<param name="register-transport" value="{{trunk.transport}}" />{{/if}}
+    {{#if trunk.transport}}<param name="contact-params" value="transport={{trunk.transport}}" />{{/if}}
+    {{#if trunk.codecs}}
+    <param name="codec-prefs" value="{{#each trunk.codecs}}{{this}}{{#unless @last}},{{/unless}}{{/each}}" />
+    {{else}}
+    <param name="codec-prefs" value="PCMU,PCMA" />
+    {{/if}}
+    {{#if trunk.dtmfMode}}<param name="dtmf-type" value="{{trunk.dtmfMode}}" />{{/if}}
+    {{#if trunk.srtp}}
+    {{#if (eq trunk.srtp "required")}}
+    <param name="inbound-late-negotiation" value="true" />
+    <param name="rtp-secure-media" value="true" />
+    {{else if (eq trunk.srtp "optional")}}
+    <param name="inbound-late-negotiation" value="true" />
+    <param name="rtp-secure-media" value="optional" />
+    {{/if}}
+    {{/if}}
   </gateway>
 </include>
 
