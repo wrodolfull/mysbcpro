@@ -253,10 +253,14 @@ export class FlowsService {
     return this.validate(flow, orgId);
   }
 
-  async publish(orgId: string, id: string): Promise<{ ok: boolean; engineRef?: string; version: number }> {
+  async publish(orgId: string, id: string, updatedFlow?: any): Promise<{ ok: boolean; engineRef?: string; version: number }> {
     this.logger.log(`Publishing flow ${id} for org ${orgId}`);
 
-    const flow = await this.findOne(orgId, id);
+    // Use updated flow if provided, otherwise fetch from database
+    let flow = updatedFlow;
+    if (!flow) {
+      flow = await this.findOne(orgId, id);
+    }
     
     // Validate before publishing
     const validation = await this.validate(flow, orgId);

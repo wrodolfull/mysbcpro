@@ -1,0 +1,1 @@
+<context name="default"><extension name="test"><condition field="destination_number" expression="^7000$"><action application="answer"/></condition></extension></context>

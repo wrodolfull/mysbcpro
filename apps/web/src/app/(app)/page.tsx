@@ -194,19 +194,27 @@ export default function Dashboard() {
         <CardContent>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <Button variant="outline" className="h-20 flex flex-col space-y-2">
-              <div className="text-lg">📞</div>
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+              </svg>
               <span className="text-xs">Novo Trunk</span>
             </Button>
             <Button variant="outline" className="h-20 flex flex-col space-y-2">
-              <div className="text-lg">📥</div>
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l4-4m0 0l4-4m-4 4l-4-4m4 4l4 4" />
+              </svg>
               <span className="text-xs">Novo Inbound</span>
             </Button>
             <Button variant="outline" className="h-20 flex flex-col space-y-2">
-              <div className="text-lg">🔀</div>
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
               <span className="text-xs">Novo Flow</span>
             </Button>
             <Button variant="outline" className="h-20 flex flex-col space-y-2">
-              <div className="text-lg">📋</div>
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
               <span className="text-xs">Nova Pesquisa</span>
             </Button>
           </div>

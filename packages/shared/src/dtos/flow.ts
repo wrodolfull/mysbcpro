@@ -12,7 +12,21 @@ export type FlowNodeType =
   | 'forward'
   | 'queue'
   | 'voicemail'
-  | 'survey_csat';
+  | 'survey_csat'
+  // Tipos de nós FreeSWITCH
+  | 'answer'
+  | 'set_defaults'
+  | 'collect_digits'
+  | 'sanitize_digits'
+  | 'validate_with_script'
+  | 'feedback_while_validating'
+  | 'branch_by_status'
+  | 'route_result'
+  | 'offer_fallback'
+  | 'transfer'
+  | 'bridge'
+  | 'callcenter'
+  | 'hangup';
 
 export interface FlowNodeBase<TType extends FlowNodeType = FlowNodeType> {
   id: string;

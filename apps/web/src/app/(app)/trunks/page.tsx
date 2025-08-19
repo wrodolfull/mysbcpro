@@ -182,6 +182,8 @@ export default function TrunksPage() {
   };
 
   const openCreateForm = () => {
+    if (!organizationId) return;
+    
     setEditingTrunk({
       organizationId: organizationId,
       name: '',
@@ -191,11 +193,7 @@ export default function TrunksPage() {
       srtp: 'off',
       dtmfMode: 'rfc2833',
       expires: 300,
-      codecs: ['PCMU', 'PCMA'],
-      register: true,
-      retrySeconds: 30,
-      ping: 25,
-      callerIdInFrom: false
+      codecs: ['PCMU', 'PCMA']
     });
     setShowForm(true);
   };

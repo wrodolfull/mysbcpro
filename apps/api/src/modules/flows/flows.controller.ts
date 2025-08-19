@@ -79,12 +79,13 @@ export class FlowsController {
   @ApiOperation({ summary: 'Publish flow to FreeSWITCH engine' })
   @ApiParam({ name: 'orgId', description: 'Organization ID' })
   @ApiParam({ name: 'id', description: 'Flow ID' })
+  @ApiBody({ description: 'Updated flow data to publish' })
   @ApiResponse({ status: 200, description: 'Flow published successfully' })
   @ApiResponse({ status: 404, description: 'Flow not found' })
   @ApiResponse({ status: 400, description: 'Flow validation failed' })
   @ApiResponse({ status: 500, description: 'Engine publication failed' })
-  async publish(@Param('orgId') orgId: string, @Param('id') id: string) {
-    return this.flows.publish(orgId, id);
+  async publish(@Param('orgId') orgId: string, @Param('id') id: string, @Body() updatedFlow?: any) {
+    return this.flows.publish(orgId, id, updatedFlow);
   }
 
   @Post(':orgId/:id/rollback/:toVersion')
