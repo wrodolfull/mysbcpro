@@ -301,6 +301,9 @@ export class FlowsService {
       // Publish to engine
       const result = await this.engine.publishFlow(orgId, publishedFlow);
 
+      // Process inbound connector associations
+      await this.processInboundAssociations(orgId, publishedFlow);
+
       this.logger.log(`Flow ${id} published to engine successfully as version ${newVersion}`);
       
       return { 
@@ -311,6 +314,44 @@ export class FlowsService {
     } catch (error) {
       this.logger.error(`Failed to publish flow ${id}`, error);
       throw new BadRequestException(`Failed to publish flow: ${(error as Error).message}`);
+    }
+  }
+
+  async unpublish(orgId: string, id: string): Promise<FlowDTO> {
+    this.logger.log(`Unpublishing flow ${id} for org ${orgId}`);
+
+    const flow = await this.findOne(orgId, id);
+
+    if (flow.status !== 'published') {
+      throw new BadRequestException('Flow is not published');
+    }
+
+    try {
+      // Remove from engine
+      await this.engine.removeFlow(orgId, id);
+
+      // Update database to draft status
+      const { data, error } = await this.supa.getAdmin()
+        .from('flows')
+        .update({
+          status: 'draft',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .eq('organization_id', orgId)
+        .select()
+        .single();
+
+      if (error) {
+        this.logger.error(`Failed to unpublish flow ${id}`, error);
+        throw error;
+      }
+
+      this.logger.log(`Flow ${id} unpublished successfully`);
+      return this.mapFromDB(data);
+    } catch (error) {
+      this.logger.error(`Failed to unpublish flow ${id}`, error);
+      throw new BadRequestException(`Failed to unpublish flow: ${(error as Error).message}`);
     }
   }
 
@@ -439,6 +480,72 @@ export class FlowsService {
       version: data.version,
       graph: data.graph
     };
+  }
+
+  private async processInboundAssociations(orgId: string, flow: FlowDTO): Promise<void> {
+    this.logger.log(`Processing inbound associations for flow ${flow.id}`);
+    
+    try {
+      // Find start nodes with selectedInboundId
+      const startNodes = flow.graph.nodes.filter(node => 
+        node.data?.nodeType === 'start' && 
+        node.data?.selectedInboundId
+      );
+
+      for (const startNode of startNodes) {
+        const inboundId = startNode.data?.selectedInboundId;
+        if (!inboundId) continue;
+        
+        this.logger.log(`Associating inbound ${inboundId} to flow ${flow.id}`);
+        
+        // Update inbound with targetFlowId
+        const { error } = await this.supa.getAdmin()
+          .from('inbounds')
+          .update({ 
+            target_flow_id: flow.id,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', inboundId)
+          .eq('organization_id', orgId);
+
+        if (error) {
+          this.logger.error(`Failed to associate inbound ${inboundId} to flow ${flow.id}`, error);
+          throw error;
+        }
+
+        // Re-publish the inbound to update its XML
+        const { data: inbound } = await this.supa.getAdmin()
+          .from('inbounds')
+          .select('*')
+          .eq('id', inboundId)
+          .eq('organization_id', orgId)
+          .single();
+
+        if (inbound) {
+          // Map database format to DTO format
+          const inboundDTO = {
+            id: inbound.id,
+            organizationId: inbound.organization_id,
+            name: inbound.name,
+            didOrUri: inbound.did_or_uri,
+            callerIdNumber: inbound.caller_id_number,
+            networkAddr: inbound.network_addr,
+            context: inbound.context,
+            priority: inbound.priority,
+            matchRules: inbound.match_rules,
+            targetFlowId: inbound.target_flow_id,
+            enabled: inbound.enabled,
+            publishedAt: inbound.published_at
+          };
+
+          await this.engine.upsertInbound(orgId, inboundDTO);
+          this.logger.log(`Re-published inbound ${inboundId} with flow association`);
+        }
+      }
+    } catch (error) {
+      this.logger.error('Failed to process inbound associations', error);
+      throw error;
+    }
   }
 
   private mapToDB(dto: Partial<FlowDTO>): any {

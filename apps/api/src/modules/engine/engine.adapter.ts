@@ -23,6 +23,7 @@ export interface EngineAdapter {
 
   // Flow management
   publishFlow(orgId: string, flow: FlowDTO): Promise<{ engineRef: string }>;
+  removeFlow(orgId: string, flowId: string): Promise<void>;
   rollbackFlow(orgId: string, flowId: string, toVersion: number): Promise<void>;
 
   // Call control

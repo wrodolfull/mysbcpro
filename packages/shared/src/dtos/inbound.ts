@@ -12,5 +12,6 @@ export interface InboundDTO {
   matchRules?: Record<string, unknown> | null; // JSON rules
   targetFlowId?: string | null; // published flow id
   enabled: boolean;
+  publishedAt?: string; // ISO timestamp when last published to engine
 }
 

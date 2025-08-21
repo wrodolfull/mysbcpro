@@ -52,7 +52,7 @@ export default function FlowXMLPreview({
         switch (nodeType.type) {
           case 'start':
             xml += `      <!-- Start -->\n`;
-            xml += `      <action application="set" data="organizationID=\${domain_uuid}"/>\n`;
+            xml += `      <action application="set" data="organizationID=${flow.organizationId || '${organizationID}'}"/>\n`;
             break;
             
           case 'answer':

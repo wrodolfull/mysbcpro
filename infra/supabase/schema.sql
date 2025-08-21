@@ -117,6 +117,7 @@ create table if not exists public.inbounds (
   match_rules jsonb,
   target_flow_id uuid,
   enabled boolean not null default true,
+  published_at timestamptz,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );

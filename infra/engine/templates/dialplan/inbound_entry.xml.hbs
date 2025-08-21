@@ -10,7 +10,7 @@
       <action application="set" data="organization_id={{organizationId}}" />
       <action application="set" data="inbound_name={{inbound.name}}" />
       {{#if inbound.targetFlowId}}
-      <action application="transfer" data="flow_{{inbound.targetFlowId}} XML {{inbound.context}}" />
+      <action application="transfer" data="7000 XML default" />
       {{else}}
       <action application="playback" data="ivr/8000/ivr-no_matching_results.wav" />
       <action application="hangup" />

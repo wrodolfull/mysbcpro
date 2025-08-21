@@ -17,7 +17,7 @@ Cada nó do flow possui:
 ### 2. Tipos de Nós Disponíveis
 
 #### Inbound Connector
-- **Start**: Ponto de entrada da chamada - OBRIGATÓRIO e deve ser o primeiro nó. Define automaticamente `organizationID=${domain_uuid}` no XML do FreeSWITCH.
+- **Start**: Ponto de entrada da chamada - OBRIGATÓRIO e deve ser o primeiro nó. Define automaticamente `organizationID` com o ID real do tenant no XML do FreeSWITCH.
 
 #### Call Control
 - **Answer**: Atende a chamada
@@ -64,7 +64,7 @@ O sistema gera automaticamente XML válido do FreeSWITCH baseado em:
 - **OBRIGATÓRIO**: Todo flow deve ter um nó Start
 - **PRIMEIRO**: O nó Start deve ser sempre o primeiro nó do flow
 - **ÚNICO**: Apenas um nó Start é permitido por flow
-- **AUTOMÁTICO**: Gera automaticamente `<action application="set" data="organizationID=${domain_uuid}"/>`
+- **AUTOMÁTICO**: Gera automaticamente `<action application="set" data="organizationID={ID_DO_TENANT}"/>`
 
 ### 1. Criar um Novo Flow
 

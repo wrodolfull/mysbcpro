@@ -114,6 +114,25 @@ export class InboundsService {
     const created = this.mapFromDB(data);
     this.logger.log(`Inbound ${created.id} created successfully`);
     
+    // Auto-publish to FreeSWITCH engine after creation
+    try {
+      await this.engine.upsertInbound(created.organizationId, created);
+      this.logger.log(`Inbound ${created.id} auto-published to engine after creation`);
+      
+      // Update published_at timestamp
+      await this.supa.getAdmin()
+        .from('inbounds')
+        .update({ 
+          published_at: new Date().toISOString()
+        })
+        .eq('id', created.id)
+        .eq('organization_id', created.organizationId);
+        
+    } catch (error) {
+      this.logger.warn(`Failed to auto-publish inbound ${created.id} after creation, but creation succeeded`, error);
+      // Don't fail the creation operation if publish fails
+    }
+    
     return created;
   }
 
@@ -173,6 +192,25 @@ export class InboundsService {
     const updated = this.mapFromDB(data);
     this.logger.log(`Inbound ${id} updated successfully`);
     
+    // Auto-publish to FreeSWITCH engine after update
+    try {
+      await this.engine.upsertInbound(orgId, updated);
+      this.logger.log(`Inbound ${id} auto-published to engine after update`);
+      
+      // Update published_at timestamp
+      await this.supa.getAdmin()
+        .from('inbounds')
+        .update({ 
+          published_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .eq('organization_id', orgId);
+        
+    } catch (error) {
+      this.logger.warn(`Failed to auto-publish inbound ${id} after update, but update succeeded`, error);
+      // Don't fail the update operation if publish fails
+    }
+    
     return updated;
   }
 
@@ -189,7 +227,7 @@ export class InboundsService {
         .from('inbounds')
         .update({ 
           updated_at: new Date().toISOString(),
-          // You could add a 'published_at' field if needed
+          published_at: new Date().toISOString()
         })
         .eq('id', id)
         .eq('organization_id', orgId);
@@ -337,7 +375,8 @@ export class InboundsService {
       priority: data.priority,
       matchRules: data.match_rules,
       targetFlowId: data.target_flow_id,
-      enabled: data.enabled
+      enabled: data.enabled,
+      publishedAt: data.published_at
     };
   }
 

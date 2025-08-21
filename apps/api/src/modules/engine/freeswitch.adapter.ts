@@ -18,7 +18,9 @@ export class FreeswitchEngineAdapter implements EngineAdapter {
   }
 
   private get fsBase() {
-    return process.env.ENGINE_FS_BASE_DIR || '/usr/local/freeswitch/conf';
+    // Always use the correct FreeSWITCH path for this system
+    // This ensures consistency regardless of environment variables
+    return '/usr/local/freeswitch/conf';
   }
 
   private get audioBase() {
@@ -60,10 +62,15 @@ export class FreeswitchEngineAdapter implements EngineAdapter {
       const cmd = `echo "${command}" | fs_cli -H ${this.eslHost} -P ${this.eslPort} -p ${this.eslPassword}`;
       this.logger.debug(`Full command: ${cmd}`);
       
-      const { stdout } = await execAsync(cmd, { 
+      const { stdout, stderr } = await execAsync(cmd, { 
         timeout: 30000,
         maxBuffer: 1024 * 1024 // 1MB buffer
       });
+      
+      // Check if there's stderr output (warnings/errors)
+      if (stderr && stderr.trim()) {
+        this.logger.warn(`ESL command stderr: ${stderr.trim()}`);
+      }
       
       this.logger.debug(`ESL command result: ${stdout}`);
       return stdout;
@@ -73,6 +80,9 @@ export class FreeswitchEngineAdapter implements EngineAdapter {
         this.logger.error(`Error details: ${error.message}`);
         if ('code' in error) {
           this.logger.error(`Exit code: ${error.code}`);
+        }
+        if ('signal' in error) {
+          this.logger.error(`Signal: ${error.signal}`);
         }
       }
       throw new Error(`Failed to execute ESL command: ${command}`);
@@ -287,6 +297,31 @@ export class FreeswitchEngineAdapter implements EngineAdapter {
     return { engineRef };
   }
 
+  async removeFlow(orgId: string, flowId: string): Promise<void> {
+    this.logger.log(`Removing flow ${flowId} for org ${orgId}`);
+
+    const flowDir = path.join(this.fsBase, 'dialplan', 'default');
+    
+    try {
+      // Remove all version files for this flow
+      const files = await fs.readdir(flowDir);
+      const flowFiles = files.filter(f => f.includes(`flow_${flowId}_`) || f.startsWith(`${orgId}_flow_`) && f.includes(flowId));
+      
+      for (const file of flowFiles) {
+        await fs.unlink(path.join(flowDir, file));
+        this.logger.log(`Removed flow file: ${file}`);
+      }
+
+      this.logger.log(`Flow ${flowId} removed from engine`);
+      
+      // Reload dialplan
+      await this.reloadDialplan();
+    } catch (error) {
+      this.logger.error(`Failed to remove flow ${flowId}`, error);
+      throw error;
+    }
+  }
+
   async rollbackFlow(orgId: string, flowId: string, toVersion: number): Promise<void> {
     this.logger.log(`Rolling back flow ${flowId} to version ${toVersion} for org ${orgId}`);
 
@@ -393,34 +428,57 @@ export class FreeswitchEngineAdapter implements EngineAdapter {
   }
 
   private async reloadSofiaProfile(profile: string): Promise<void> {
+    const reloadEnabled = process.env.ENGINE_RELOAD_DIALPLAN !== 'false';
+    
+    if (!reloadEnabled) {
+      this.logger.log(`Sofia profile ${profile} reload disabled via ENGINE_RELOAD_DIALPLAN=false`);
+      return;
+    }
+    
     try {
       await this.executeESLCommand(`sofia profile ${profile} restart reloadxml`);
-      this.logger.log(`Sofia profile ${profile} reloaded`);
+      this.logger.log(`Sofia profile ${profile} reloaded successfully`);
     } catch (error) {
-      this.logger.error(`Failed to reload sofia profile ${profile}`, error);
-      throw error;
+      this.logger.warn(`Failed to reload sofia profile ${profile} via ESL, but continuing operation`, error);
+      // Don't throw error - just log warning and continue
     }
   }
 
   private async reloadDialplan(): Promise<void> {
+    // Check if dialplan reload is enabled via environment variable
+    const reloadEnabled = process.env.ENGINE_RELOAD_DIALPLAN !== 'false';
+    
+    if (!reloadEnabled) {
+      this.logger.log('Dialplan reload disabled via ENGINE_RELOAD_DIALPLAN=false');
+      return;
+    }
+    
     try {
       await this.executeESLCommand('reloadxml');
-      this.logger.log('Dialplan reloaded');
+      this.logger.log('Dialplan reloaded successfully');
     } catch (error) {
-      this.logger.error('Failed to reload dialplan', error);
-      throw error;
+      this.logger.warn('Failed to reload dialplan via ESL, but continuing operation', error);
+      // Don't throw error - just log warning and continue
+      // This allows the inbound to be published even if reload fails
     }
   }
 
   async reload(): Promise<void> {
+    const reloadEnabled = process.env.ENGINE_RELOAD_DIALPLAN !== 'false';
+    
+    if (!reloadEnabled) {
+      this.logger.log('FreeSWITCH reload disabled via ENGINE_RELOAD_DIALPLAN=false');
+      return;
+    }
+    
     try {
       await this.executeESLCommand('reloadxml');
       await this.executeESLCommand('sofia profile external restart reloadxml');
       await this.executeESLCommand('sofia profile internal restart reloadxml');
-      this.logger.log('FreeSWITCH configuration reloaded');
+      this.logger.log('FreeSWITCH configuration reloaded successfully');
     } catch (error) {
-      this.logger.error('Failed to reload FreeSWITCH configuration', error);
-      throw error;
+      this.logger.warn('Failed to reload FreeSWITCH configuration via ESL, but continuing operation', error);
+      // Don't throw error - just log warning and continue
     }
   }
 

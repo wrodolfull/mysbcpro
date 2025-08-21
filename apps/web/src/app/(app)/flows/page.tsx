@@ -39,7 +39,7 @@ const generateFreeSwitchXML = (flow: any, nodes: Node[], edges: Edge[], nodeType
       switch (nodeType.type) {
         case 'start':
           xml += `      <!-- Start -->\n`;
-          xml += `      <action application="set" data="organizationID=\${domain_uuid}"/>\n`;
+          xml += `      <action application="set" data="organizationID=${flow.organizationId || '${organizationID}'}"/>\n`;
           break;
           
         case 'answer':
@@ -231,10 +231,13 @@ export default function FlowsPage() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
         </svg>
       ),
-      description: 'Ponto de entrada da chamada - Define organizationID=${domain_uuid} - OBRIGATÓRIO e deve ser o primeiro nó',
+      description: 'Ponto de entrada da chamada - Associe um Inbound Connector para que as chamadas sejam roteadas para este flow - OBRIGATÓRIO e deve ser o primeiro nó',
       freeswitchAction: 'set',
       defaultDigits: '7000',
-      hasConfig: false,
+      hasConfig: true,
+      configProps: [
+        { name: 'selectedInboundId', type: 'inbound_select', label: 'Inbound Connector', required: true }
+      ],
       isRequired: true,
       mustBeFirst: true
     },
@@ -782,6 +785,29 @@ export default function FlowsPage() {
     }
   };
 
+  const unpublishFlow = async (id: string) => {
+    if (!organizationId) return;
+    
+    try {
+      const response = await fetch(`http://localhost:4000/flows/${organizationId}/${id}/unpublish`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (response.ok) {
+        alert('Flow despublicado com sucesso! Status alterado para rascunho.');
+        await loadFlows();
+      } else {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        console.error('Error unpublishing flow:', errorData);
+        alert(`Erro ao despublicar flow: ${errorData.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error unpublishing flow:', error);
+      alert('Erro ao despublicar flow');
+    }
+  };
+
   const validateFlow = async (id: string) => {
     if (!organizationId) return;
     
@@ -1037,12 +1063,20 @@ export default function FlowsPage() {
                   </button>
                 )}
                 {flow.status === 'published' && (
-                  <button
-                    onClick={() => validateFlow(flow.id!)}
-                    className="px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded hover:bg-purple-200"
-                  >
-                    Validar
-                  </button>
+                  <>
+                    <button
+                      onClick={() => validateFlow(flow.id!)}
+                      className="px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded hover:bg-purple-200"
+                    >
+                      Validar
+                    </button>
+                    <button
+                      onClick={() => unpublishFlow(flow.id!)}
+                      className="px-3 py-1 text-sm bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200"
+                    >
+                      Voltar para Rascunho
+                    </button>
+                  </>
                 )}
                 <button
                   onClick={() => deleteFlow(flow.id!)}

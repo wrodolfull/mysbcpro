@@ -34,6 +34,9 @@ export class EngineService {
   publishFlow(orgId: string, flow: FlowDTO) {
     return this.adapter.publishFlow(orgId, flow);
   }
+  removeFlow(orgId: string, flowId: string) {
+    return this.adapter.removeFlow(orgId, flowId);
+  }
   rollbackFlow(orgId: string, flowId: string, toVersion: number) {
     return this.adapter.rollbackFlow(orgId, flowId, toVersion);
   }

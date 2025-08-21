@@ -21,6 +21,7 @@ interface InboundDTO {
   matchRules?: Record<string, unknown> | null;
   targetFlowId?: string | null;
   enabled: boolean;
+  publishedAt?: string;
 }
 
 export default function InboundsPage() {
@@ -28,6 +29,8 @@ export default function InboundsPage() {
   const [loading, setLoading] = useState(true);
   const [editingInbound, setEditingInbound] = useState<InboundDTO | null>(null);
   const [showForm, setShowForm] = useState(false);
+
+  const [savingInbound, setSavingInbound] = useState(false);
 
   // Get dynamic organization ID from context
   const { organizationId, loading: orgLoading, error: orgError } = useOrganizationContext();
@@ -61,6 +64,8 @@ export default function InboundsPage() {
     if (!organizationId) return;
     
     try {
+      setSavingInbound(true);
+      
       const url = inbound.id 
         ? `http://localhost:4000/inbounds/${organizationId}/${inbound.id}`
         : `http://localhost:4000/inbounds/${organizationId}`;
@@ -83,63 +88,14 @@ export default function InboundsPage() {
     } catch (error) {
       console.error('Error saving inbound:', error);
       alert('Error saving inbound: Network error');
+    } finally {
+      setSavingInbound(false);
     }
   };
 
-  const publishInbound = async (id: string) => {
-    if (!organizationId) return;
-    
-    try {
-      const response = await fetch(`http://localhost:4000/inbounds/${organizationId}/${id}/publish`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      
-      if (response.ok) {
-        alert('Inbound connector publicado com sucesso!');
-        await loadInbounds();
-      } else {
-        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-        console.error('Error publishing inbound:', errorData);
-        alert(`Erro ao publicar inbound connector: ${errorData.message || 'Unknown error'}`);
-      }
-    } catch (error) {
-      console.error('Error publishing inbound:', error);
-      alert('Erro ao publicar inbound connector');
-    }
-  };
 
-  const testInbound = async (id: string) => {
-    if (!organizationId) return;
-    
-    try {
-      const response = await fetch(`http://localhost:4000/inbounds/${organizationId}/${id}/test`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      
-      if (response.ok) {
-        const result = await response.json();
-        if (result.ok) {
-          alert('Teste de roteamento: Sucesso');
-        } else {
-          const warnings = result.details?.routing?.warnings || [];
-          if (warnings.length > 0) {
-            alert(`Teste de roteamento: Avisos\n${warnings.join('\n')}`);
-          } else {
-            alert('Teste de roteamento: Falhou');
-          }
-        }
-      } else {
-        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-        console.error('Error testing inbound:', errorData);
-        alert(`Erro ao testar inbound connector: ${errorData.message || 'Unknown error'}`);
-      }
-    } catch (error) {
-      console.error('Error testing inbound:', error);
-      alert('Erro ao testar inbound connector');
-    }
-  };
+
+
 
   const deleteInbound = async (id: string) => {
     if (!organizationId) return;
@@ -236,6 +192,7 @@ export default function InboundsPage() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contexto</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prioridade</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
                   </tr>
                 </thead>
@@ -263,33 +220,23 @@ export default function InboundsPage() {
                           {inbound.enabled ? 'Ativo' : 'Inativo'}
                         </span>
                       </td>
+
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <div className="flex space-x-2">
                           <Button 
                             variant="outline" 
                             size="sm"
                             onClick={() => openEditForm(inbound)}
+                            disabled={savingInbound}
                           >
                             Editar
                           </Button>
-                          <Button 
-                            variant="default" 
-                            size="sm"
-                            onClick={() => publishInbound(inbound.id!)}
-                          >
-                            Publicar
-                          </Button>
-                          <Button 
-                            variant="secondary" 
-                            size="sm"
-                            onClick={() => testInbound(inbound.id!)}
-                          >
-                            Testar
-                          </Button>
+
                           <Button 
                             variant="destructive" 
                             size="sm"
                             onClick={() => deleteInbound(inbound.id!)}
+                            disabled={savingInbound}
                           >
                             Deletar
                           </Button>
@@ -318,6 +265,7 @@ export default function InboundsPage() {
             setShowForm(false);
             setEditingInbound(null);
           }}
+          saving={savingInbound}
         />
       )}
     </div>
@@ -327,11 +275,13 @@ export default function InboundsPage() {
 function InboundForm({ 
   inbound, 
   onSave, 
-  onCancel 
+  onCancel,
+  saving
 }: { 
   inbound: InboundDTO;
-  onSave: (inbound: InboundDTO) => void;
+  onSave: (inbound: InboundDTO) => Promise<void>;
   onCancel: () => void;
+  saving: boolean;
 }) {
   const [formData, setFormData] = useState<InboundDTO>(inbound);
 
@@ -430,16 +380,7 @@ function InboundForm({
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="targetFlowId">Flow de Destino</Label>
-              <Input
-                id="targetFlowId"
-                type="text"
-                value={formData.targetFlowId || ''}
-                onChange={(e) => updateField('targetFlowId', e.target.value)}
-                placeholder="ID do flow publicado"
-              />
-            </div>
+
 
             <div className="flex items-center space-x-2">
               <input
@@ -463,8 +404,9 @@ function InboundForm({
               <Button
                 type="submit"
                 variant="default"
+                disabled={saving}
               >
-                Salvar e Publicar
+                {saving ? 'Salvando...' : 'Salvar e Publicar'}
               </Button>
             </div>
           </form>

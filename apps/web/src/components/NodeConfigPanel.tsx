@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Node } from 'reactflow';
+import { useOrganizationContext } from '../contexts/OrganizationContext';
 
 interface NodeConfigPanelProps {
   node: Node | null;
@@ -20,7 +21,10 @@ export default function NodeConfigPanel({
 }: NodeConfigPanelProps) {
   const [activeTab, setActiveTab] = useState<'config' | 'xml' | 'preview'>('config');
   const [xmlPreview, setXmlPreview] = useState<string>('');
+  const [inbounds, setInbounds] = useState<any[]>([]);
+  const [loadingInbounds, setLoadingInbounds] = useState(false);
 
+  const { organizationId } = useOrganizationContext();
   const nodeType = node ? nodeTypes.find(nt => nt.type === node.data.nodeType) : null;
 
   useEffect(() => {
@@ -29,6 +33,32 @@ export default function NodeConfigPanel({
     }
   }, [node, nodeType]);
 
+  // Load inbounds when organization changes or when we have a start node
+  useEffect(() => {
+    if (organizationId && node?.data.nodeType === 'start') {
+      loadInbounds();
+    }
+  }, [organizationId, node?.data.nodeType]);
+
+  const loadInbounds = async () => {
+    if (!organizationId) return;
+    
+    try {
+      setLoadingInbounds(true);
+      const response = await fetch(`http://localhost:4000/inbounds/${organizationId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setInbounds(data);
+      } else {
+        console.error('Error loading inbounds:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error loading inbounds:', error);
+    } finally {
+      setLoadingInbounds(false);
+    }
+  };
+
   const generateXMLPreview = () => {
     if (!node || !nodeType) return;
 
@@ -36,7 +66,7 @@ export default function NodeConfigPanel({
     
     switch (nodeType.type) {
       case 'start':
-        xml = `<!-- Start -->\n<action application="set" data="organizationID=\${domain_uuid}"/>`;
+        xml = `<!-- Start -->\n<action application="set" data="organizationID=${node.data.organizationID || '${organizationID}'}"/>`;
         break;
         
       case 'answer':
@@ -202,6 +232,36 @@ export default function NodeConfigPanel({
                 <option key={option} value={option}>{option}</option>
               ))}
             </select>
+          </div>
+        );
+
+      case 'inbound_select':
+        return (
+          <div>
+            <label htmlFor={prop.name} className="block text-sm font-medium text-gray-700 mb-1">
+              {prop.label} {prop.required && <span className="text-red-500">*</span>}
+            </label>
+            <select
+              id={prop.name}
+              value={value || ''}
+              onChange={(e) => handleConfigChange(prop.name, e.target.value)}
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              disabled={loadingInbounds}
+            >
+              <option value="">
+                {loadingInbounds ? 'Carregando...' : 'Selecione um Inbound Connector'}
+              </option>
+              {inbounds.map((inbound) => (
+                <option key={inbound.id} value={inbound.id}>
+                  {inbound.name} ({inbound.didOrUri})
+                </option>
+              ))}
+            </select>
+            {inbounds.length === 0 && !loadingInbounds && (
+              <p className="text-xs text-gray-500 mt-1">
+                Nenhum Inbound Connector disponível. Crie um primeiro na página /inbounds.
+              </p>
+            )}
           </div>
         );
         

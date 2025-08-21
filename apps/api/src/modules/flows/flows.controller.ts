@@ -88,6 +88,17 @@ export class FlowsController {
     return this.flows.publish(orgId, id, updatedFlow);
   }
 
+  @Post(':orgId/:id/unpublish')
+  @ApiOperation({ summary: 'Unpublish flow (change to draft status)' })
+  @ApiParam({ name: 'orgId', description: 'Organization ID' })
+  @ApiParam({ name: 'id', description: 'Flow ID' })
+  @ApiResponse({ status: 200, description: 'Flow unpublished successfully' })
+  @ApiResponse({ status: 404, description: 'Flow not found' })
+  @ApiResponse({ status: 400, description: 'Flow is not published' })
+  async unpublish(@Param('orgId') orgId: string, @Param('id') id: string) {
+    return this.flows.unpublish(orgId, id);
+  }
+
   @Post(':orgId/:id/rollback/:toVersion')
   @ApiOperation({ summary: 'Rollback flow to previous version' })
   @ApiParam({ name: 'orgId', description: 'Organization ID' })

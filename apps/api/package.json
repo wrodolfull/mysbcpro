@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node dist/main.js",
     "start:dev": "nest build && node scripts/fix-extensions.mjs && node dist/main.js",
+    "start:freeswitch": "./start.sh",
     "start:watch": "nest start --watch",
     "build": "nest build && node scripts/fix-extensions.mjs",
     "lint": "eslint .",
